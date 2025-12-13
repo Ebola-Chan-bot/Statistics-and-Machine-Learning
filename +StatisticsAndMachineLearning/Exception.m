@@ -1,0 +1,21 @@
+classdef Exception<MATLAB.Lang.IEnumerableException
+	enumeration
+		AnovaN_model_invalid
+		Nonexistent_comparison_groups
+		Not_enough_input_arguments
+		Input_syntax_unsupported
+		SampleDimension_invalid
+		SampleDimension_exceeds_ndims
+		Nested_unsupported_balanced
+		Comparison_must_be_table
+		Comparison_contains_PValue
+		Comparison_varnames_mismatch
+		OneWay_Comparison_must_be_table
+		OneWay_Comparison_must_single_variable
+		OneWay_Comparison_column_invalid
+		Comparison_tensor_invalid_type
+		Comparison_tensor_invalid_ndims
+		Comparison_tensor_first_dim_invalid
+		Comparison_tensor_second_dim_mismatch
+	end
+end
