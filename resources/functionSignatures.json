@@ -1,0 +1,134 @@
+{
+		"UniExp.TabularAnovaN": {
+		"inputs": [
+			{
+				"mutuallyExclusiveGroup": [
+					[
+						{
+							"name": "Y",
+							"kind": "required",
+							"type": [
+								[
+									"double",
+									"vector"
+								],
+								[
+									"single",
+									"vector"
+								]
+							],
+							"purpose": "同内置anovan的第一个位置参数"
+						}
+					],
+					[
+						{
+							"name": "YColumn",
+							"kind": "required",
+							"type": "scalar",
+							"purpose": "列名或列序号"
+						}
+					]
+				]
+			},
+			{
+				"name": "GroupTable",
+				"kind": "required",
+				"type": "tabular",
+				"purpose": "分组变量表"
+			},
+			{
+				"name": "Alpha",
+				"kind": "namevalue",
+				"type": [
+					[
+						"double",
+						"scalar",
+						">=0",
+						"<=1"
+					],
+					[
+						"single",
+						"scalar",
+						">=0",
+						"<=1"
+					]
+				],
+				"purpose": "置信界限的显著性水平"
+			},
+			{
+				"name": "Continuous",
+				"kind": "namevalue",
+				"type": [
+					[
+						"string",
+						"vector"
+					],
+					[
+						"cell",
+						"vector"
+					]
+				],
+				"purpose": "连续预测因子的指示器"
+			},
+			{
+				"name": "Display",
+				"kind": "namevalue",
+				"type": [
+					"logical",
+					"scalar"
+				],
+				"purpose": "显示方差分析表的指示器"
+			},
+			{
+				"name": "Model",
+				"kind": "namevalue",
+				"type": [
+					[
+						"choices={'linear', 'interaction', 'full'}"
+					],
+					[
+						"real",
+						"scalar"
+					],
+					[
+						"tabular"
+					]
+				],
+				"purpose": "模型的类型"
+			},
+			{
+				"name": "Nested",
+				"kind": "namevalue",
+				"type": "tabular",
+				"purpose": "指示组变量之间的嵌套关系"
+			},
+			{
+				"name": "Random",
+				"kind": "namevalue",
+				"type": [
+					[
+						"string",
+						"vector"
+					],
+					[
+						"cell",
+						"vector"
+					]
+				],
+				"purpose": "随机变量的指示器"
+			},
+			{
+				"name": "SSType",
+				"kind": "namevalue",
+				"type": "choices={1, 2, 3,'h'}",
+				"purpose": "平方和的类型"
+			},
+			{
+				"name": "Comparison",
+				"kind": "namevalue",
+				"type": "tabular",
+				"purpose": "多重比较对组"
+			}
+		]
+	}
+}
