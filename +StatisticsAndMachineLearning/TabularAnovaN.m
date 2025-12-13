@@ -3,13 +3,13 @@
 %[text] ```matlabCodeExample
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(Y,GroupTable,Name=Value);
 %[text] %非平衡采样，指定一列因变量和自变量表
-%[text] 
+%[text]
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(YColumn,GroupTable,Name=Value);
 %[text] %非平衡采样，指定因变量名和所有变量表
-%[text] 
+%[text]
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(OneWayTable,Name=Value);
 %[text] %平衡采样，执行单因素方差分析
-%[text] 
+%[text]
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(NWayTensor,SampleDimension,Name=Value);
 %[text] %平衡采样，执行多因素方差分析
 %[text] ```
@@ -27,8 +27,6 @@
 %[text] #### SampleDimension(1,1)
 %[text] 指定NWayTensor的哪个维度视为采样维度，其它维度视为因素
 %[text] ### 名称值参数
-%[text] #### Alpha(1,1)
-%[text] 置信界限的显著性水平，指定为范围为0到1的标量值。
 %[text] #### Continuous(1,:)
 %[text] 连续预测因子的指示器，表示哪些分组变量应被视为连续预测因子，而不是分类预测因子，指定为变量名字符串向量。输入OneWayTable时，忽略此参数。
 %[text] #### Display(1,1)logical=true
@@ -73,7 +71,7 @@ switch mode
 	case "GroupTable"
 		Y = varargin{1};
 		GroupTable = varargin{2};
-
+		
 		% 允许用列序号或列名指定因变量
 		if isnumeric(Y) && isreal(Y) && isscalar(Y)
 			try
@@ -87,13 +85,13 @@ switch mode
 			GroupTable.(Y) = [];
 			Y = YColumn;
 		end
-
+		
 		VarNames = GroupTable.Properties.VariableNames;
 		NumVariables = width(GroupTable);
-
+		
 		AnovanOptions = iNormalizeAnovanOptions(AnovanOptions,VarNames,NumVariables);
 		AnovanOptionsCell = [lower(fieldnames(AnovanOptions)),struct2cell(AnovanOptions)]';
-
+		
 		Groups = cell(1,NumVariables);
 		for V = 1:NumVariables
 			Groups{V} = GroupTable{:,V};
@@ -105,79 +103,114 @@ switch mode
 		if isduration(Y)
 			Y = seconds(Y);
 		end
-
+		
 		[varargout{1:clip(nargout,3,4)}] = anovan(Y,Groups,AnovanOptionsCell{:},varnames=VarNames);
 		if provided.Comparison
 			Comparison = MultcompareOptions.Comparison;
-			[Comparison,ComparisonPValue] = iComparisonFromAnovanStats(varargout{3},Comparison,AnovanOptions,provided);
+			[Comparison,ComparisonPValue] = iComparisonFromAnovanStats(varargout{3},Comparison,AnovanOptions);
 			% table 输入：返回加 PValue 的 table
 			Comparison.PValue = ComparisonPValue;
 			varargout = [{Comparison},varargout];
 		end
-
+		
 	case "OneWayTable"
 		OneWayTable = varargin{1};
 		X = OneWayTable{:,:};
 		if isduration(X)
 			X = seconds(X);
 		end
-
+		
 		% OneWayTable 语法：使用 anova1（连续变量等 anovan 选项不适用）
-		alphaProvided = provided.Alpha;
 		displayProvided = provided.Display;
-		alphaVal = 0.05;
-		if alphaProvided && ~isempty(AnovanOptions.Alpha)
-			alphaVal = AnovanOptions.Alpha;
-		end
-
+		
 		if displayProvided
 			displayStr = 'on';
 			if ~AnovanOptions.Display
 				displayStr = 'off';
 			end
-			[p,tbl,stats] = anova1(X,OneWayTable.Properties.VariableNames,alphaVal,displayStr);
+			[p,tbl,stats] = anova1(X,OneWayTable.Properties.VariableNames,displayStr);
 		else
-			if alphaProvided
-				[p,tbl,stats] = anova1(X,OneWayTable.Properties.VariableNames,alphaVal);
-			else
-				[p,tbl,stats] = anova1(X,OneWayTable.Properties.VariableNames);
-			end
+			[p,tbl,stats] = anova1(X,OneWayTable.Properties.VariableNames);
 		end
-
+		
 		outCount = clip(nargout,3,4);
-		varargout(1:outCount) = {p,tbl,stats,[]};
-
+		out = {p,tbl,stats,[]};
+		varargout(1:outCount) = out(1:outCount);
+		
 		if provided.Comparison
 			Comparison = MultcompareOptions.Comparison;
-			[Comparison,ComparisonPValue] = iComparisonFromAnova1Stats(stats,Comparison,AnovanOptions,provided,alphaVal);
+			[Comparison,ComparisonPValue] = iComparisonFromAnova1Stats(stats,Comparison,AnovanOptions);
 			Comparison.PValue = ComparisonPValue;
 			varargout = [{Comparison},varargout];
 		end
-
+		
 	case "NWayTensor"
 		NWayTensor = varargin{1};
 		SampleDimension = varargin{2};
-
+		
 		if ~isnumeric(SampleDimension) || ~isscalar(SampleDimension) || SampleDimension < 1 || SampleDimension ~= fix(SampleDimension)
 			StatisticsAndMachineLearning.Exception.SampleDimension_invalid.Throw;
 		end
-
+		
 		nd = ndims(NWayTensor);
 		if SampleDimension > nd
 			StatisticsAndMachineLearning.Exception.SampleDimension_exceeds_ndims.Throw;
 		end
-
+		
+		if provided.Nested
+			StatisticsAndMachineLearning.Exception.Nested_unsupported_balanced.Throw;
+		end
+		
+		% NWayTensor 为矩阵时：使用 anova1（等价于单因素平衡设计）
+		if nd == 2
+			X = NWayTensor;
+			if isduration(X)
+				X = seconds(X);
+			end
+			
+			% anova1 需要：行=采样，列=组
+			if SampleDimension == 2
+				X = X.';
+			end
+			
+			groupNames = cellstr(string(1:size(X,2)));
+			if provided.Display
+				if AnovanOptions.Display
+					displayStr = 'on';
+				else
+					displayStr = 'off';
+				end
+				[p,tbl,stats] = anova1(X,groupNames,displayStr);
+			else
+				[p,tbl,stats] = anova1(X,groupNames);
+			end
+			
+			outCount = clip(nargout,3,4);
+			out = {p,tbl,stats,[]};
+			varargout(1:outCount) = out(1:outCount);
+			
+			if provided.Comparison
+				ComparisonTensor = MultcompareOptions.Comparison;
+				factorDim = setdiff(1:nd,SampleDimension,'stable');
+				VarNames = cellstr("Dim" + string(factorDim));
+				ComparisonTable = iTensorComparisonToTable(ComparisonTensor,VarNames);
+				[~,PValue] = iComparisonFromAnova1Stats(stats,ComparisonTable,AnovanOptions);
+				varargout = [{PValue},varargout];
+			end
+			return
+		end
+		
 		Y = NWayTensor;
 		if isduration(Y)
 			Y = seconds(Y);
 		end
 		Y = Y(:);
-
+		
 		sz = size(NWayTensor);
 		idx = (1:numel(NWayTensor))';
 		subs = cell(1,nd);
 		[subs{:}] = ind2sub(sz,idx);
-
+		
 		factorDims = setdiff(1:nd,SampleDimension,'stable');
 		numFactors = numel(factorDims);
 		Groups = cell(1,numFactors);
@@ -185,19 +218,19 @@ switch mode
 			Groups{k} = subs{factorDims(k)};
 		end
 		VarNames = cellstr("Dim" + string(factorDims));
-
-		if provided.Nested
-			StatisticsAndMachineLearning.Exception.Nested_unsupported_balanced.Throw;
-		end
-
+		
+		% NWayTensor 输入：Continuous/Random 等因素相关参数使用张量维度号。
+		% 交给 anovan 时需要映射为因素序号（跳过采样维度；采样维度之后的维度减 1）。
+		AnovanOptions = iMapTensorFactorIndexOptions(AnovanOptions,SampleDimension,nd);
+		
 		AnovanOptions = iNormalizeAnovanOptions(AnovanOptions,VarNames,numFactors);
 		AnovanOptionsCell = [lower(fieldnames(AnovanOptions)),struct2cell(AnovanOptions)]';
-
+		
 		[varargout{1:clip(nargout,3,4)}] = anovan(Y,Groups,AnovanOptionsCell{:},varnames=VarNames);
 		if provided.Comparison
 			ComparisonTensor = MultcompareOptions.Comparison;
 			ComparisonTable = iTensorComparisonToTable(ComparisonTensor,VarNames);
-			[~,PValue] = iComparisonFromAnovanStats(varargout{3},ComparisonTable,AnovanOptions,provided);
+			[~,PValue] = iComparisonFromAnovanStats(varargout{3},ComparisonTable,AnovanOptions);
 			% 张量输入：第一个返回值为 PValue 向量
 			varargout = [{PValue},varargout];
 		end
@@ -228,7 +261,7 @@ if numel(args) >= 2 && isnumeric(args{2}) && isscalar(args{2})
 	return
 end
 
-	StatisticsAndMachineLearning.Exception.Input_syntax_unsupported.Throw;
+StatisticsAndMachineLearning.Exception.Input_syntax_unsupported.Throw;
 end
 
 function [AnovanOptions,MultcompareOptions,provided] = iParseNameValue(nv)
@@ -236,7 +269,6 @@ ip = inputParser;
 ip.CaseSensitive = false;
 ip.KeepUnmatched = false;
 
-addParameter(ip,'Alpha',[]);
 addParameter(ip,'Continuous',[]);
 addParameter(ip,'Display',[]);
 addParameter(ip,'Model',[]);
@@ -249,7 +281,6 @@ parse(ip,nv{:});
 r = ip.Results;
 
 provided = struct;
-provided.Alpha = ~isempty(r.Alpha);
 provided.Continuous = ~isempty(r.Continuous);
 provided.Display = ~isempty(r.Display);
 provided.Model = ~isempty(r.Model);
@@ -259,7 +290,6 @@ provided.SSType = ~isempty(r.SSType);
 provided.Comparison = ~isempty(r.Comparison);
 
 AnovanOptions = struct;
-if provided.Alpha, AnovanOptions.Alpha = r.Alpha; end
 if provided.Continuous, AnovanOptions.Continuous = r.Continuous; end
 if provided.Display, AnovanOptions.Display = r.Display; end
 if provided.Model, AnovanOptions.Model = r.Model; end
@@ -315,7 +345,7 @@ if isfield(AnovanOptions,'Random')
 end
 end
 
-function [Comparison,ComparisonPValue] = iComparisonFromAnovanStats(stats,Comparison,AnovanOptions,provided)
+function [Comparison,ComparisonPValue] = iComparisonFromAnovanStats(stats,Comparison,AnovanOptions)
 if ~istable(Comparison)
 	StatisticsAndMachineLearning.Exception.Comparison_must_be_table.Throw;
 end
@@ -327,9 +357,6 @@ end
 AnovanOptionsCell = {};
 if isfield(AnovanOptions,'display')
 	AnovanOptionsCell = [AnovanOptionsCell,{'display',AnovanOptions.display}];
-end
-if provided.Alpha && isfield(AnovanOptions,'Alpha')
-	AnovanOptionsCell = [AnovanOptionsCell,{'Alpha',AnovanOptions.Alpha}];
 end
 
 VariableNames = Comparison.Properties.VariableNames;
@@ -369,7 +396,7 @@ end
 ComparisonPValue = ComparisonMatrix(rowIndex,6);
 end
 
-function [Comparison,ComparisonPValue] = iComparisonFromAnova1Stats(stats,Comparison,AnovanOptions,provided,alphaVal)
+function [Comparison,ComparisonPValue] = iComparisonFromAnova1Stats(stats,Comparison,AnovanOptions)
 if ~istable(Comparison)
 	StatisticsAndMachineLearning.Exception.OneWay_Comparison_must_be_table.Throw;
 end
@@ -384,14 +411,17 @@ end
 
 if isfield(AnovanOptions,'display')
 	displayStr = AnovanOptions.display;
+elseif isfield(AnovanOptions,'Display')
+	if AnovanOptions.Display
+		displayStr = 'on';
+	else
+		displayStr = 'off';
+	end
 else
 	displayStr = 'on';
 end
 
 mcArgs = {'Display',displayStr};
-if provided.Alpha
-	mcArgs = [mcArgs,{'Alpha',alphaVal}];
-end
 
 [ComparisonMatrix,~,~,GNames] = multcompare(stats,mcArgs{:});
 
@@ -461,6 +491,33 @@ function ComparisonTable = iTensorComparisonToTable(ComparisonTensor,VarNames)
 if ~(isnumeric(ComparisonTensor) || islogical(ComparisonTensor) || isstring(ComparisonTensor) || ischar(ComparisonTensor) || iscategorical(ComparisonTensor))
 	StatisticsAndMachineLearning.Exception.Comparison_tensor_invalid_type.Throw;
 end
+
+	function AnovanOptions = iMapTensorFactorIndexOptions(AnovanOptions,SampleDimension,nd) %#ok<DEFNU>
+		% 将以“张量维度号”指定的因素索引，映射为 anovan 需要的“因素序号”。
+		% 例如：SampleDimension=2 时，维度 3 -> 因素 2。
+		if isfield(AnovanOptions,'Continuous') && isnumeric(AnovanOptions.Continuous)
+			AnovanOptions.Continuous = iMapTensorDimsToFactorIndices(AnovanOptions.Continuous,SampleDimension,nd);
+		end
+		
+		if isfield(AnovanOptions,'Random') && isnumeric(AnovanOptions.Random)
+			AnovanOptions.Random = iMapTensorDimsToFactorIndices(AnovanOptions.Random,SampleDimension,nd);
+		end
+	end
+
+	function factorIdx = iMapTensorDimsToFactorIndices(dims,SampleDimension,nd) %#ok<DEFNU>
+		% dims: 张量维度号（必须跳过采样维度）
+		if isempty(dims)
+			factorIdx = dims;
+			return
+		end
+		
+		dims = double(dims(:)');
+		if any(dims ~= fix(dims)) || any(dims < 1) || any(dims > nd) || any(dims == SampleDimension)
+			StatisticsAndMachineLearning.Exception.Input_syntax_unsupported.Throw;
+		end
+		
+		factorIdx = dims - (dims > SampleDimension);
+	end
 
 if ndims(ComparisonTensor) ~= 3
 	StatisticsAndMachineLearning.Exception.Comparison_tensor_invalid_ndims.Throw;
