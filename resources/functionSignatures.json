@@ -1,5 +1,5 @@
 {
-		"UniExp.TabularAnovaN": {
+	"StatisticsAndMachineLearning.TabularAnovaN": {
 		"inputs": [
 			{
 				"mutuallyExclusiveGroup": [
@@ -7,34 +7,51 @@
 						{
 							"name": "Y",
 							"kind": "required",
-							"type": [
-								[
-									"double",
-									"vector"
-								],
-								[
-									"single",
-									"vector"
-								]
-							],
+							"type": "vector",
 							"purpose": "同内置anovan的第一个位置参数"
+						},
+						{
+							"name": "GroupTable",
+							"kind": "required",
+							"type": "tabular",
+							"purpose": "分组变量表"
 						}
 					],
 					[
 						{
 							"name": "YColumn",
 							"kind": "required",
-							"type": "scalar",
 							"purpose": "列名或列序号"
+						},
+						{
+							"name": "GroupTable",
+							"kind": "required",
+							"type": "tabular",
+							"purpose": "分组变量表"
+						}
+					],
+					[
+						{
+							"name": "OneWayTable",
+							"kind": "required",
+							"type": "tabular",
+							"purpose": "平衡采样的单因素数据表"
+						}
+					],
+					[
+						{
+							"name": "NWayTensor",
+							"kind": "required",
+							"purpose": "平衡采样的多因素张量"
+						},
+						{
+							"name": "SampleDimension",
+							"kind": "required",
+							"type": "positive",
+							"purpose": "指定NWayTensor哪个维度为采样维度"
 						}
 					]
 				]
-			},
-			{
-				"name": "GroupTable",
-				"kind": "required",
-				"type": "tabular",
-				"purpose": "分组变量表"
 			},
 			{
 				"name": "Alpha",
@@ -126,7 +143,22 @@
 			{
 				"name": "Comparison",
 				"kind": "namevalue",
-				"type": "tabular",
+				"type": [
+					"tabular",
+					[
+						"numeric"
+					],
+					[
+						"logical"
+					],
+					[
+						"string"
+					],
+					[
+						"categorical"
+					],
+					"char"
+				],
 				"purpose": "多重比较对组"
 			}
 		]
