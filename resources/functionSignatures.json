@@ -1,4 +1,26 @@
 {
+	"StatisticsAndMachineLearning.DimensionalPca": {
+		"inputs": [
+			{
+				"name": "Array",
+				"kind": "required",
+				"type": "real",
+				"purpose": "输入数组"
+			},
+			{
+				"name": "Dimensions",
+				"kind": "required",
+				"type": "logical",
+				"purpose": "true表示变量，false表示采样"
+			},
+			{
+				"name": "NumComponents",
+				"kind": "ordered",
+				"type": "positive",
+				"purpose": "要返回的主成分个数"
+			}
+		]
+	},
 	"StatisticsAndMachineLearning.TabularAnovaN": {
 		"inputs": [
 			{
