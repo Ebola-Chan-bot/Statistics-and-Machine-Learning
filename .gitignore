@@ -1,2 +1,4 @@
 **/*.asv
 **/*.mltbx
+deploymentLog.html
+resources/5*

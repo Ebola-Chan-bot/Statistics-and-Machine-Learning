@@ -3,13 +3,13 @@
 %[text] ```matlabCodeExample
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(Y,GroupTable,Name=Value);
 %[text] %非平衡采样，指定一列因变量和自变量表
-%[text]
+%[text] 
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(YColumn,GroupTable,Name=Value);
 %[text] %非平衡采样，指定因变量名和所有变量表
-%[text]
+%[text] 
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(OneWayTable,Name=Value);
 %[text] %平衡采样，执行单因素方差分析
-%[text]
+%[text] 
 %[text] varargout=StatisticsAndMachineLearning.TabularAnovaN(NWayTensor,SampleDimension,Name=Value);
 %[text] %平衡采样，执行多因素方差分析
 %[text] ```
@@ -59,7 +59,7 @@
 %[text] - 如果输入是table，则第一个返回值也是table，是在输入的Comparison基础上加一列PValue，表示每个比较对组的多重比较P值。后续返回值同内置anovan。
 %[text] - 如果输入是张量，则第一个返回值是(:,1)，与输入Comparison的第3维一一对应，表示每个比较对组的P值。后续返回值同内置anovan。 \
 %[text] 如果未指定Comparison参数，则返回值同内置anovan。
-%[text] **See also** [anovan](<matlab:doc anovan>) [StatisticsAndMachineLearning.TabularAnova1](<matlab:doc StatisticsAndMachineLearning.TabularAnova1>)
+%[text] **See also** [anovan](<matlab:doc anovan>)
 function varargout = TabularAnovaN(varargin)
 
 [mode,positionalCount] = iDetectSyntax(varargin);

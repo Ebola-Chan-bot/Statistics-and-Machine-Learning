@@ -39,3 +39,5 @@
 resources/project
 .git*
 工具箱图像.png
+resources/5*
+deploymentLog.html
